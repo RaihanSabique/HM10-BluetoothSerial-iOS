@@ -34,6 +34,17 @@ final class SerialViewController: UIViewController, UITextFieldDelegate, Bluetoo
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint! // used to move the textField up when the keyboard is present
     @IBOutlet weak var barButton: UIBarButtonItem!
     @IBOutlet weak var navItem: UINavigationItem!
+    
+    @IBOutlet weak var rectView: UIView!
+    
+    // Force & Rect Data
+    var force: CGFloat = 0.0
+    var leftRectPoints: Dictionary<String, CGPoint> = [:]
+    var rightRectPoints: Dictionary<String, CGPoint> = [:]
+    
+    // Force filled shape
+    var right_shape_filled: CAShapeLayer!
+    var left_shape_filled: CAShapeLayer!
 
 
 //MARK: Functions
@@ -45,7 +56,8 @@ final class SerialViewController: UIViewController, UITextFieldDelegate, Bluetoo
         serial = BluetoothSerial(delegate: self)
         
         // UI
-        mainTextView.text = ""
+        mainTextView.text = "Force sensor is not connected. Please Connect!\n"
+        
         reloadView()
         
         NotificationCenter.default.addObserver(self, selector: #selector(SerialViewController.reloadView), name: NSNotification.Name(rawValue: "reloadStartViewController"), object: nil)
@@ -65,6 +77,24 @@ final class SerialViewController: UIViewController, UITextFieldDelegate, Bluetoo
         bottomView.layer.shadowRadius = 0
         bottomView.layer.shadowOpacity = 0.5
         bottomView.layer.shadowColor = UIColor.gray.cgColor
+        
+        // Style the Rect UIView
+        rectView.backgroundColor = UIColor.clear
+        rectView.frame.size.height = UIScreen.main.bounds.height*0.7
+        rectView.frame.size.width = UIScreen.main.bounds.width*0.9
+        rectView.sizeToFit()
+        
+        // Darw Left Rectangle
+        let height = self.rectView.frame.height
+        let width = self.rectView.frame.width
+//        print(height, width)
+//        leftRectPoints = drawLeftRect(h: height, w:width)
+//        rightRectPoints = drawRightRect(h: height, w:width)
+//        print(rightRectPoints)
+//        
+//        // Test Right Rect fill by force
+//        right_shape_filled = fillRightRectByForce(force: 2.0)
+//        left_shape_filled = fillLeftRectByForce(force: 3.0)
     }
 
     deinit {
@@ -120,16 +150,166 @@ final class SerialViewController: UIViewController, UITextFieldDelegate, Bluetoo
         mainTextView.scrollRangeToVisible(range)
     }
     
+    func drawLeftRect(h: CGFloat, w: CGFloat)->Dictionary<String, CGPoint>{
+        let cornerRadius = 0.0
+        let path = UIBezierPath()
+        let p1 = CGPoint(x: w*0.25, y: h*0.80)
+        let p2 = CGPoint(x: w*0.40, y: h*0.80)
+        let p3 = CGPoint(x: w*0.40, y: h*0.2)
+        let p4 = CGPoint(x: w*0.25, y: h*0.2)
+        
+        path.move(to: p1)
+        path.addLine(to: p2)
+        path.addLine(to: p3)
+        path.move(to: p4)
+        path.addLine(to: p1)
+        path.close()
+//        print(path.cgPath)
+        let shape = CAShapeLayer()
+        shape.path = path.cgPath
+        shape.strokeColor = UIColor.red.cgColor;
+        shape.fillColor = UIColor.clear.cgColor
+        shape.lineWidth = 10
+        rectView.layer.addSublayer(shape)
+        // Add label
+        let Label = UILabel(frame: CGRectMake(w*0.26, h*0.80, 200, 50))
+        Label.textColor = UIColor.red
+        Label.backgroundColor = UIColor.clear
+        Label.font = Label.font.withSize(30)
+        Label.text = "Left Hand"
+        rectView.addSubview(Label)
+        return ["p1": p1, "p2": p2, "p3": p3, "p4": p4]
+    }
+    
+    func drawRightRect(h: CGFloat, w: CGFloat)->Dictionary<String, CGPoint>{
+        let cornerRadius = 0.0
+        let path = UIBezierPath()
+        let p1 = CGPoint(x: w*0.65, y: h*0.80)
+        let p2 = CGPoint(x: w*0.80, y: h*0.80)
+        let p3 = CGPoint(x: w*0.80, y: h*0.20)
+        let p4 = CGPoint(x: w*0.65, y: h*0.20)
+        
+        path.move(to: p1)
+        path.addLine(to: p2)
+        path.addLine(to: p3)
+        path.move(to: p4)
+        path.addLine(to: p1)
+        path.close()
+//        print(path.cgPath)
+        let shape = CAShapeLayer()
+        shape.path = path.cgPath
+        shape.strokeColor = UIColor.red.cgColor;
+        shape.fillColor = UIColor.clear.cgColor
+        shape.lineWidth = 10
+        rectView.layer.addSublayer(shape)
+        // Add label
+        let Label = UILabel(frame: CGRectMake(w*0.66, h*0.80, 200, 50))
+        Label.textColor = UIColor.red
+        Label.backgroundColor = UIColor.clear
+        Label.font = Label.font.withSize(30)
+        Label.text = "Right Hand"
+        rectView.addSubview(Label)
+        return ["p1": p1, "p2": p2, "p3": p3, "p4": p4]
+    }
+    
 
 //MARK: BluetoothSerialDelegate
     
+//    func serialDidReceiveData(_ data: Data) {
+//        print(data)
+//    }
+    
+//    func serialDidReceiveBytes(_ bytes: [UInt8]) {
+//        print(bytes)
+//    }
+    
     func serialDidReceiveString(_ message: String) {
         // add the received text to the textView, optionally with a line break at the end
-        mainTextView.text! += message
+//        if message.contains("<"){
+//            mainTextView.text! += message
+//        }
+        print(message)
+        if message.contains(">"){
+            mainTextView.text! += message + "\n\n"
+        }
+        else {
+            mainTextView.text! += message
+        }
+                
+        let message_list = message.components(separatedBy: ",")
+//        let fl = message_list[0]
+//        let fr = message_list[1]
+//        print(message.count)
+//        print(message_list)
+//        let force_left = CGFloat((fl.components(separatedBy: "=")[1] as NSString).floatValue)
+        
+//        for m in message_list {
+//            mainTextView.text! += m + " ";
+//            print(mainTextView.text!)
+//        }
+                    
         let pref = UserDefaults.standard.integer(forKey: ReceivedMessageOptionKey)
-        if pref == ReceivedMessageOption.newline.rawValue { mainTextView.text! += "\n" }
+//        left_shape_filled.removeFromSuperlayer()
+//        left_shape_filled = fillLeftRectByForce(force: CGFloat(force_left))
+        
+//        let force_right = CGFloat((fr.components(separatedBy: "=")[1] as NSString).floatValue)
+//        print(force_left, force_right)
+//        right_shape_filled.removeFromSuperlayer()
+//        right_shape_filled = fillRightRectByForce(force: CGFloat(force_right))
+        // if pref == ReceivedMessageOption.newline.rawValue { mainTextView.text! += "\n" }
         textViewScrollToBottom()
     }
+    
+    func fillRightRectByForce(force: CGFloat)->CAShapeLayer{
+        let cornerRadius = 0.0
+        let path = UIBezierPath()
+        print(rightRectPoints)
+        let p1 = CGPoint(x: rightRectPoints["p1"]!.x+5, y: rightRectPoints["p1"]!.y-5)
+        let p2 = CGPoint(x: rightRectPoints["p2"]!.x-5, y: rightRectPoints["p2"]!.y-5)
+        let p3 = CGPoint(x: rightRectPoints["p2"]!.x-5, y: rightRectPoints["p2"]!.y - force*30.0)
+        let p4 = CGPoint(x: rightRectPoints["p1"]!.x+5, y: rightRectPoints["p2"]!.y - force*30.0)
+        
+        path.move(to: p1)
+        path.addLine(to: p2)
+        path.addLine(to: p3)
+        path.addLine(to: p4)
+        path.addLine(to: p1)
+        path.close()
+//        print(path.cgPath)
+        let shape = CAShapeLayer()
+        shape.path = path.cgPath
+        shape.strokeColor = UIColor.green.cgColor;
+        shape.fillColor = UIColor.green.cgColor
+        shape.lineWidth = 0
+        rectView.layer.addSublayer(shape)
+        return shape
+    }
+    
+    func fillLeftRectByForce(force: CGFloat)->CAShapeLayer{
+        let cornerRadius = 0.0
+        let path = UIBezierPath()
+        print(rightRectPoints)
+        let p1 = CGPoint(x: leftRectPoints["p1"]!.x+5, y: leftRectPoints["p1"]!.y-5)
+        let p2 = CGPoint(x: leftRectPoints["p2"]!.x-5, y: leftRectPoints["p2"]!.y-5)
+        let p3 = CGPoint(x: leftRectPoints["p2"]!.x-5, y: leftRectPoints["p2"]!.y - force*30.0)
+        let p4 = CGPoint(x: leftRectPoints["p1"]!.x+5, y: leftRectPoints["p2"]!.y - force*30.0)
+        
+        path.move(to: p1)
+        path.addLine(to: p2)
+        path.addLine(to: p3)
+        path.addLine(to: p4)
+        path.addLine(to: p1)
+        path.close()
+//        print(path.cgPath)
+        let shape = CAShapeLayer()
+        shape.path = path.cgPath
+        shape.strokeColor = UIColor.blue.cgColor;
+        shape.fillColor = UIColor.blue.cgColor
+        shape.lineWidth = 0
+        rectView.layer.addSublayer(shape)
+        return shape
+    }
+    
     
     func serialDidDisconnect(_ peripheral: CBPeripheral, error: NSError?) {
         reloadView()
@@ -138,6 +318,9 @@ final class SerialViewController: UIViewController, UITextFieldDelegate, Bluetoo
         hud?.mode = MBProgressHUDMode.text
         hud?.labelText = "Disconnected"
         hud?.hide(true, afterDelay: 1.0)
+    }
+    func serialDidConnect(_ peripheral: CBPeripheral) {
+        mainTextView.text! = "Sensor Reading\n"
     }
     
     func serialDidChangeState() {
@@ -187,6 +370,8 @@ final class SerialViewController: UIViewController, UITextFieldDelegate, Bluetoo
     @objc func dismissKeyboard() {
         messageField.resignFirstResponder()
     }
+    
+    
     
     
 //MARK: IBActions

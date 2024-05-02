@@ -60,6 +60,8 @@ final class PreferencesTableViewController: UITableViewController {
             // get the newly selected option
             let selectedCell = (indexPath as NSIndexPath).row
             selectedReceivedMessageOption = ReceivedMessageOption(rawValue: selectedCell)
+            print(selectedReceivedMessageOption)
+            
 
             // set new checkmark
             tableView.cellForRow(at: IndexPath(row: selectedCell, section: 1))?.accessoryType = UITableViewCell.AccessoryType.checkmark
